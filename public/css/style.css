@@ -89,7 +89,6 @@ nav a:hover, nav a.active {
   margin: 40px auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
 /* Hero Section */
