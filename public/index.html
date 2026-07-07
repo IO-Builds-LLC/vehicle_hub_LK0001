@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Registry Hub</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="/" class="logo">
+      <i class="fa-solid fa-car-side"></i> VehicleHub
+    </a>
+    <nav>
+      <a href="/admin-login.html"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Secure Vehicle Registry</h1>
+      <p>A fast, decentralized registry database for vehicle owners and administrators.</p>
+    </section>
+
+    <div class="card text-center">
+      <div class="profile-header-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h2 class="card-title">Manage Your Registration</h2>
+      <p class="mb-20" style="color: var(--text-secondary);">Register a new vehicle profile or look up an existing record instantly using the registered vehicle plate number.</p>
+      
+      <div class="btn-group">
+        <a href="/register.html" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> New Registration
+        </a>
+        <button id="btnViewProfile" class="btn btn-secondary">
+          <i class="fa-solid fa-magnifying-glass"></i> View Profile
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- View Profile Modal -->
+  <div id="lookupModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-magnifying-glass"></i> View Vehicle Profile</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <form id="lookupForm">
+        <div class="modal-body">
+          <div id="lookupError" class="alert alert-danger hidden"></div>
+          <div class="form-group">
+            <label for="vehicleNumberInput">Enter Vehicle Number</label>
+            <input type="text" id="vehicleNumberInput" class="form-control" placeholder="e.g. WP-CAD-1234" required autocomplete="off">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Search is case-insensitive.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnCancelModal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Search Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Vehicle Registration Hub. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const modal = document.getElementById('lookupModal');
+    const btnViewProfile = document.getElementById('btnViewProfile');
+    const modalClose = document.getElementById('modalClose');
+    const btnCancelModal = document.getElementById('btnCancelModal');
+    const lookupForm = document.getElementById('lookupForm');
+    const vehicleNumberInput = document.getElementById('vehicleNumberInput');
+    const lookupError = document.getElementById('lookupError');
+
+    // Open Modal
+    btnViewProfile.addEventListener('click', () => {
+      modal.style.display = 'flex';
+      vehicleNumberInput.value = '';
+      lookupError.classList.add('hidden');
+      vehicleNumberInput.focus();
+    });
+
+    // Close Modal helpers
+    const closeModal = () => {
+      modal.style.display = 'none';
+    };
+
+    modalClose.addEventListener('click', closeModal);
+    btnCancelModal.addEventListener('click', closeModal);
+
+    // Close modal on background click
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Form Submission
+    lookupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      lookupError.classList.add('hidden');
+      const val = vehicleNumberInput.value.trim().toUpperCase();
+      if (!val) return;
+
+      try {
+        const response = await fetch(`/api/profile/${encodeURIComponent(val)}`);
+        if (response.ok) {
+          // Profile exists, redirect to profile page
+          window.location.href = `/profile.html?v=${encodeURIComponent(val)}`;
+        } else {
+          const errData = await response.json();
+          lookupError.textContent = errData.error || 'Profile not found.';
+          lookupError.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error(err);
+        lookupError.textContent = 'Server communication error. Please try again.';
+        lookupError.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Profile - VehicleHub</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="/" class="logo">
+      <i class="fa-solid fa-car-side"></i> VehicleHub
+    </a>
+    <nav>
+      <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+      <a href="/admin-login.html"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="card profile-card">
+      <div id="loader" class="text-center" style="padding: 40px 0;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--accent-primary);"></i>
+        <p style="margin-top: 16px; color: var(--text-secondary);">Retrieving vehicle profile...</p>
+      </div>
+
+      <div id="errorBlock" class="hidden text-center" style="padding: 20px 0;">
+        <div class="profile-header-icon" style="color: var(--error); border-color: rgba(239, 68, 68, 0.3);">
+          <i class="fa-solid fa-circle-exclamation"></i>
+        </div>
+        <h3 style="color: var(--error); margin-bottom: 12px;">Error Fetching Profile</h3>
+        <p id="errorText" style="color: var(--text-secondary); margin-bottom: 24px;"></p>
+        <a href="/" class="btn btn-secondary">Go Back Home</a>
+      </div>
+
+      <div id="profileContent" class="hidden">
+        <div class="profile-header-icon">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h2 class="card-title" style="margin-bottom: 8px;">Vehicle Registry Profile</h2>
+        <p class="text-center" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">
+          Registered Plate: <span id="titlePlate" style="color: var(--accent-primary); font-weight: 700;"></span>
+        </p>
+
+        <div class="alert alert-warning">
+          <i class="fa-solid fa-lock"></i>
+          <div>
+            <strong>Locked Record:</strong> Once registered, profile details cannot be modified. Only administrators can update registration profiles.
+          </div>
+        </div>
+
+        <h3 style="font-size: 1.1rem; color: var(--accent-secondary); margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+          <i class="fa-solid fa-user"></i> Owner Profile
+        </h3>
+
+        <div class="profile-grid">
+          <div class="profile-field">
+            <div class="profile-field-label">Owner Full Name</div>
+            <div class="profile-field-value" id="profName">-</div>
+          </div>
+          <div class="profile-field">
+            <div class="profile-field-label">Contact Phone</div>
+            <div class="profile-field-value" id="profPhone">-</div>
+          </div>
+          <div class="profile-field" style="grid-column: span 2;">
+            <div class="profile-field-label">Residential Address</div>
+            <div class="profile-field-value" id="profAddress">-</div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1.1rem; color: var(--accent-secondary); margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+          <i class="fa-solid fa-car"></i> Vehicle Details
+        </h3>
+
+        <div class="profile-grid">
+          <div class="profile-field">
+            <div class="profile-field-label">Vehicle Registration Number</div>
+            <div class="profile-field-value" id="profPlate">-</div>
+          </div>
+          <div class="profile-field">
+            <div class="profile-field-label">Vehicle Type</div>
+            <div class="profile-field-value" id="profType">-</div>
+          </div>
+          <div class="profile-field" style="grid-column: span 2;">
+            <div class="profile-field-label">Chassis / VIN Number</div>
+            <div class="profile-field-value" id="profChassis">-</div>
+          </div>
+          <div class="profile-field" style="grid-column: span 2;">
+            <div class="profile-field-label">Registration Date & Time</div>
+            <div class="profile-field-value" id="profDate">-</div>
+          </div>
+        </div>
+
+        <div class="btn-group" style="margin-top: 30px;">
+          <a href="/" class="btn btn-secondary">
+            <i class="fa-solid fa-chevron-left"></i> Back to Search
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Vehicle Registration Hub. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loader = document.getElementById('loader');
+      const errorBlock = document.getElementById('errorBlock');
+      const errorText = document.getElementById('errorText');
+      const profileContent = document.getElementById('profileContent');
+
+      // Get plate number from URL parameter 'v'
+      const urlParams = new URLSearchParams(window.location.search);
+      const vehicleNum = urlParams.get('v');
+
+      if (!vehicleNum) {
+        loader.classList.add('hidden');
+        errorText.textContent = 'No vehicle number was provided in the request.';
+        errorBlock.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/profile/${encodeURIComponent(vehicleNum)}`);
+        
+        if (response.ok) {
+          const profile = await response.json();
+          
+          // Populate fields
+          document.getElementById('titlePlate').textContent = profile.vehicle_number;
+          document.getElementById('profName').textContent = profile.name;
+          document.getElementById('profPhone').textContent = profile.phone;
+          document.getElementById('profAddress').textContent = profile.address;
+          document.getElementById('profPlate').textContent = profile.vehicle_number;
+          document.getElementById('profType').textContent = profile.vehicle_type;
+          document.getElementById('profChassis').textContent = profile.chassis_number;
+          
+          // Format date
+          const regDate = new Date(profile.created_at);
+          document.getElementById('profDate').textContent = regDate.toLocaleString();
+
+          loader.classList.add('hidden');
+          profileContent.classList.remove('hidden');
+        } else {
+          const data = await response.json();
+          loader.classList.add('hidden');
+          errorText.textContent = data.error || 'Profile could not be found.';
+          errorBlock.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error(err);
+        loader.classList.add('hidden');
+        errorText.textContent = 'A system error occurred. Please try again.';
+        errorBlock.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

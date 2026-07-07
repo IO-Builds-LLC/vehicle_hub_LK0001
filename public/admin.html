@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - VehicleHub</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- QR Code Library via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <a href="/" class="logo">
+      <i class="fa-solid fa-car-side"></i> VehicleHub <span style="font-size: 0.8rem; font-weight: normal; padding: 2px 8px; border-radius: 12px; background: rgba(0,242,254,0.15); color: var(--accent-primary); margin-left: 8px;">Admin</span>
+    </a>
+    <nav>
+      <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+      <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </nav>
+  </header>
+
+  <main class="container admin-container">
+    <div class="admin-header">
+      <div>
+        <h1 style="font-size: 2rem; font-weight: 800;">Administration Portal</h1>
+        <p style="color: var(--text-secondary);">Manage database entries, prefill Google Forms, and configure QR settings.</p>
+      </div>
+    </div>
+
+    <!-- Admin Tabs -->
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-users')">
+        <i class="fa-solid fa-users-gear"></i> Manage Registrations
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-qr')">
+        <i class="fa-solid fa-qrcode"></i> QR Code Portal
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-settings')">
+        <i class="fa-brands fa-google"></i> Google Form Setup
+      </button>
+    </div>
+
+    <div id="globalAlert" class="alert hidden"></div>
+
+    <!-- TAB 1: User management -->
+    <div id="tab-users" class="tab-content active">
+      <div class="search-controls">
+        <div class="search-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="adminSearchInput" class="form-control" placeholder="Search profiles by name or vehicle number...">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Owner Name</th>
+              <th>Vehicle Number</th>
+              <th>Vehicle Type</th>
+              <th>Phone Number</th>
+              <th>Chassis Number</th>
+              <th>Registered Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="profilesTableBody">
+            <!-- Dynamic rows will go here -->
+            <tr>
+              <td colspan="7" class="text-center" style="padding: 40px 0; color: var(--text-muted);">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+                <p>Loading vehicle profiles...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: QR Code Portal -->
+    <div id="tab-qr" class="tab-content">
+      <div class="qr-container">
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">Auto-Generated Site Link</h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">This QR code automatically links to the main landing page of this deployment. Scanning it redirects users here to lookup or register profiles.</p>
+        
+        <div class="qr-code-wrapper">
+          <canvas id="qrCanvas"></canvas>
+        </div>
+        
+        <div class="qr-url" id="qrSiteUrl">http://localhost:3000</div>
+        
+        <button id="btnDownloadQR" class="btn btn-primary">
+          <i class="fa-solid fa-download"></i> Download QR Image
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 3: Google Form Settings -->
+    <div id="tab-settings" class="tab-content">
+      <div class="card" style="max-width: 700px; margin: 0 auto;">
+        <h2 class="card-title" style="text-align: left; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;">
+          <i class="fa-brands fa-google"></i> Google Form Autofill Setup
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">
+          Map user profile attributes to Google Form input entry IDs. This allows administrators to launch a prefilled Google Form with a single click.
+        </p>
+
+        <form id="settingsForm">
+          <div class="form-group">
+            <label for="googleFormUrl">Google Form View URL</label>
+            <input type="url" id="googleFormUrl" class="form-control" placeholder="https://docs.google.com/forms/d/e/1FAIpQLS.../viewform" required>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Must be the public "viewform" URL (not the editor URL).</p>
+          </div>
+
+          <h3 style="font-size: 1rem; color: var(--accent-primary); margin-top: 24px; margin-bottom: 16px;">Entry ID Mappings</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+            Find these ID strings (e.g. <code>entry.123456789</code>) by inspecting the input fields of your published Google Form.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="mapName">Owner Name Parameter</label>
+              <input type="text" id="mapName" class="form-control" placeholder="entry.1000001" required>
+            </div>
+            <div class="form-group">
+              <label for="mapPhone">Phone Parameter</label>
+              <input type="text" id="mapPhone" class="form-control" placeholder="entry.1000002" required>
+            </div>
+            <div class="form-group">
+              <label for="mapAddress">Address Parameter</label>
+              <input type="text" id="mapAddress" class="form-control" placeholder="entry.1000003" required>
+            </div>
+            <div class="form-group">
+              <label for="mapVehicleNumber">Vehicle Number Parameter</label>
+              <input type="text" id="mapVehicleNumber" class="form-control" placeholder="entry.1000004" required>
+            </div>
+            <div class="form-group">
+              <label for="mapVehicleType">Vehicle Type Parameter</label>
+              <input type="text" id="mapVehicleType" class="form-control" placeholder="entry.1000005" required>
+            </div>
+            <div class="form-group">
+              <label for="mapChassis">Chassis Number Parameter</label>
+              <input type="text" id="mapChassis" class="form-control" placeholder="entry.1000006" required>
+            </div>
+          </div>
+
+          <div class="btn-group" style="margin-top: 30px; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-floppy-disk"></i> Save Configurations
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Edit User Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-pen"></i> Edit Vehicle Registration</h3>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form id="editForm">
+        <input type="hidden" id="editProfileId">
+        <div class="modal-body">
+          <div id="editError" class="alert alert-danger hidden"></div>
+          
+          <div class="form-group">
+            <label for="editName">Owner Name</label>
+            <input type="text" id="editName" class="form-control" required autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label for="editPhone">Phone Number</label>
+            <input type="text" id="editPhone" class="form-control" required autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label for="editAddress">Address</label>
+            <input type="text" id="editAddress" class="form-control" required autocomplete="off">
+          </div>
+
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="editVehicleNumber">Vehicle Number</label>
+              <input type="text" id="editVehicleNumber" class="form-control" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label for="editVehicleType">Vehicle Type</label>
+              <select id="editVehicleType" class="form-control" required>
+                <option value="Car">Car</option>
+                <option value="Motorcycle">Motorcycle</option>
+                <option value="SUV">SUV</option>
+                <option value="Van">Van</option>
+                <option value="Lorry/Truck">Lorry/Truck</option>
+                <option value="Electric Scooter">Electric Scooter</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editChassisNumber">Chassis Number</label>
+            <input type="text" id="editChassisNumber" class="form-control" required autocomplete="off">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Update Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Vehicle Registration Hub. All rights reserved.</p>
+  </footer>
+
+  <script>
+    let allProfiles = [];
+    let globalSettings = null;
+
+    // Check session authorization
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/api/admin/check-session');
+        const data = await res.json();
+        if (!data.isAdmin) {
+          window.location.href = '/admin-login.html';
+          return;
+        }
+
+        // Initialize Page
+        loadProfiles();
+        loadSettings();
+        setupQR();
+      } catch (err) {
+        console.error(err);
+        window.location.href = '/admin-login.html';
+      }
+    });
+
+    // Logout
+    document.getElementById('btnLogout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/api/admin/logout', { method: 'POST' });
+        window.location.href = '/';
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    // Tabs switching logic
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Load registered user profiles
+    async function loadProfiles() {
+      const tbody = document.getElementById('profilesTableBody');
+      try {
+        const response = await fetch('/api/admin/profiles');
+        if (!response.ok) throw new Error('Unauthorised');
+        allProfiles = await response.json();
+        renderProfiles(allProfiles);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: var(--error);"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load user profiles.</td></tr>`;
+      }
+    }
+
+    // Render profile rows in the table
+    function renderProfiles(profiles) {
+      const tbody = document.getElementById('profilesTableBody');
+      if (profiles.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px 0;">No vehicle registrations found in database.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      profiles.forEach(p => {
+        const row = document.createElement('tr');
+        const regDate = new Date(p.created_at).toLocaleDateString();
+
+        // Check if google form config exists
+        let prefillBtnHtml = '';
+        if (globalSettings && globalSettings.google_form_url && globalSettings.form_mappings) {
+          const prefillUrl = buildGoogleFormPrefillUrl(p);
+          prefillBtnHtml = `<a href="${prefillUrl}" target="_blank" class="btn btn-secondary btn-sm" title="Autofill Google Form" style="color: var(--accent-primary); border-color: rgba(0, 242, 254, 0.2);"><i class="fa-brands fa-google"></i> Autofill</a>`;
+        } else {
+          prefillBtnHtml = `<button onclick="showPrefillNotice()" class="btn btn-secondary btn-sm" title="Autofill Google Form" style="color: var(--text-muted); opacity: 0.6;"><i class="fa-brands fa-google"></i> Autofill</button>`;
+        }
+
+        row.innerHTML = `
+          <td><strong>${escapeHtml(p.name)}</strong></td>
+          <td><span style="color: var(--accent-primary); font-family: monospace; font-weight: 600;">${escapeHtml(p.vehicle_number)}</span></td>
+          <td>${escapeHtml(p.vehicle_type)}</td>
+          <td>${escapeHtml(p.phone)}</td>
+          <td><span style="font-family: monospace; font-size: 0.85rem;">${escapeHtml(p.chassis_number)}</span></td>
+          <td>${regDate}</td>
+          <td>
+            <div class="actions-cell">
+              ${prefillBtnHtml}
+              <button onclick="openEditModal(${p.id})" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              <button onclick="deleteProfile(${p.id}, '${escapeJS(p.vehicle_number)}')" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Helper functions
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function escapeJS(str) {
+      if (!str) return '';
+      return str.replace(/'/g, "\\'");
+    }
+
+    // Client-side search filtering
+    document.getElementById('adminSearchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const filtered = allProfiles.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.vehicle_number.toLowerCase().includes(query)
+      );
+      renderProfiles(filtered);
+    });
+
+    // Edit profile Modal Management
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editForm');
+    const editError = document.getElementById('editError');
+
+    function openEditModal(profileId) {
+      const profile = allProfiles.find(p => p.id === profileId);
+      if (!profile) return;
+
+      document.getElementById('editProfileId').value = profile.id;
+      document.getElementById('editName').value = profile.name;
+      document.getElementById('editPhone').value = profile.phone;
+      document.getElementById('editAddress').value = profile.address;
+      document.getElementById('editVehicleNumber').value = profile.vehicle_number;
+      document.getElementById('editVehicleType').value = profile.vehicle_type;
+      document.getElementById('editChassisNumber').value = profile.chassis_number;
+
+      editError.classList.add('hidden');
+      editModal.style.display = 'flex';
+    }
+
+    function closeEditModal() {
+      editModal.style.display = 'none';
+    }
+
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      editError.classList.add('hidden');
+      const profileId = document.getElementById('editProfileId').value;
+
+      const payload = {
+        name: document.getElementById('editName').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        address: document.getElementById('editAddress').value.trim(),
+        vehicle_number: document.getElementById('editVehicleNumber').value.trim(),
+        vehicle_type: document.getElementById('editVehicleType').value,
+        chassis_number: document.getElementById('editChassisNumber').value.trim()
+      };
+
+      try {
+        const response = await fetch(`/api/admin/profile/${profileId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          closeEditModal();
+          showNotification('success', 'Profile updated successfully.');
+          loadProfiles(); // Refresh
+        } else {
+          editError.textContent = data.error || 'Failed to update profile.';
+          editError.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error(err);
+        editError.textContent = 'Server response error. Try again.';
+        editError.classList.remove('hidden');
+      }
+    });
+
+    // Delete profile record
+    async function deleteProfile(profileId, plate) {
+      if (!confirm(`Are you sure you want to delete profile for vehicle: ${plate}? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/profile/${profileId}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          showNotification('success', `Profile for ${plate} deleted successfully.`);
+          loadProfiles();
+        } else {
+          const data = await response.json();
+          showNotification('danger', data.error || 'Failed to delete record.');
+        }
+      } catch (err) {
+        console.error(err);
+        showNotification('danger', 'Server communication error.');
+      }
+    }
+
+    // Google Form Prefill functions
+    async function loadSettings() {
+      try {
+        const response = await fetch('/api/admin/settings');
+        globalSettings = await response.json();
+
+        if (globalSettings) {
+          document.getElementById('googleFormUrl').value = globalSettings.google_form_url || '';
+          
+          if (globalSettings.form_mappings) {
+            document.getElementById('mapName').value = globalSettings.form_mappings.name || '';
+            document.getElementById('mapPhone').value = globalSettings.form_mappings.phone || '';
+            document.getElementById('mapAddress').value = globalSettings.form_mappings.address || '';
+            document.getElementById('mapVehicleNumber').value = globalSettings.form_mappings.vehicle_number || '';
+            document.getElementById('mapVehicleType').value = globalSettings.form_mappings.vehicle_type || '';
+            document.getElementById('mapChassis').value = globalSettings.form_mappings.chassis_number || '';
+          }
+          
+          // Re-render profiles list so buttons adapt to settings
+          if (allProfiles.length > 0) {
+            renderProfiles(allProfiles);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load settings', err);
+      }
+    }
+
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        google_form_url: document.getElementById('googleFormUrl').value.trim(),
+        form_mappings: {
+          name: document.getElementById('mapName').value.trim(),
+          phone: document.getElementById('mapPhone').value.trim(),
+          address: document.getElementById('mapAddress').value.trim(),
+          vehicle_number: document.getElementById('mapVehicleNumber').value.trim(),
+          vehicle_type: document.getElementById('mapVehicleType').value.trim(),
+          chassis_number: document.getElementById('mapChassis').value.trim()
+        }
+      };
+
+      try {
+        const response = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          showNotification('success', 'Google Form mappings saved successfully.');
+          globalSettings = payload; // local cache update
+          renderProfiles(allProfiles); // refresh buttons
+        } else {
+          const data = await response.json();
+          showNotification('danger', data.error || 'Failed to save configuration settings.');
+        }
+      } catch (err) {
+        console.error(err);
+        showNotification('danger', 'Server error while saving settings.');
+      }
+    });
+
+    // Helper: Construct prefilled Google Form URL
+    function buildGoogleFormPrefillUrl(profile) {
+      if (!globalSettings || !globalSettings.google_form_url) return '#';
+      
+      let baseUrl = globalSettings.google_form_url;
+      // Ensure url parameters are setup
+      if (!baseUrl.includes('?')) {
+        baseUrl += '?';
+      } else if (!baseUrl.endsWith('&') && !baseUrl.endsWith('?')) {
+        baseUrl += '&';
+      }
+      
+      // Google forms prefilled usp identifier
+      baseUrl += 'usp=pp_url';
+
+      const mappings = globalSettings.form_mappings;
+      const params = [];
+
+      if (mappings.name && profile.name) {
+        params.push(`${encodeURIComponent(mappings.name)}=${encodeURIComponent(profile.name)}`);
+      }
+      if (mappings.phone && profile.phone) {
+        params.push(`${encodeURIComponent(mappings.phone)}=${encodeURIComponent(profile.phone)}`);
+      }
+      if (mappings.address && profile.address) {
+        params.push(`${encodeURIComponent(mappings.address)}=${encodeURIComponent(profile.address)}`);
+      }
+      if (mappings.vehicle_number && profile.vehicle_number) {
+        params.push(`${encodeURIComponent(mappings.vehicle_number)}=${encodeURIComponent(profile.vehicle_number)}`);
+      }
+      if (mappings.vehicle_type && profile.vehicle_type) {
+        params.push(`${encodeURIComponent(mappings.vehicle_type)}=${encodeURIComponent(profile.vehicle_type)}`);
+      }
+      if (mappings.chassis_number && profile.chassis_number) {
+        params.push(`${encodeURIComponent(mappings.chassis_number)}=${encodeURIComponent(profile.chassis_number)}`);
+      }
+
+      if (params.length > 0) {
+        return `${baseUrl}&${params.join('&')}`;
+      }
+      return baseUrl;
+    }
+
+    function showPrefillNotice() {
+      alert('Please setup Google Form mappings in the Google Form Setup tab first!');
+      switchTab('tab-settings');
+    }
+
+    // QR Code setup
+    function setupQR() {
+      // Auto detect current server location loaded in browser
+      const originUrl = window.location.origin;
+      
+      document.getElementById('qrSiteUrl').textContent = originUrl;
+
+      // Render QR code
+      const qr = new QRious({
+        element: document.getElementById('qrCanvas'),
+        value: originUrl,
+        size: 250,
+        level: 'H'
+      });
+
+      // Download handler
+      document.getElementById('btnDownloadQR').addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'vehicle-hub-qr.png';
+        link.href = document.getElementById('qrCanvas').toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // Custom alerts system
+    function showNotification(type, msg) {
+      const alertEl = document.getElementById('globalAlert');
+      alertEl.className = `alert alert-${type}`;
+      alertEl.textContent = msg;
+      alertEl.classList.remove('hidden');
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Automatically hide after 5 seconds
+      setTimeout(() => {
+        alertEl.classList.add('hidden');
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
