@@ -371,6 +371,7 @@
           <td>${regDate}</td>
           <td>
             <div class="actions-cell">
+              <a href="/profile.html?v=${encodeURIComponent(p.vehicle_number)}" target="_blank" class="btn btn-secondary btn-sm" title="View Profile"><i class="fa-solid fa-eye"></i> View</a>
               ${prefillBtnHtml}
               <button onclick="openEditModal(${p.id})" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
               <button onclick="deleteProfile(${p.id}, '${escapeJS(p.vehicle_number)}')" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash-can"></i> Delete</button>
