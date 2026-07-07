@@ -55,7 +55,7 @@
           <div id="lookupError" class="alert alert-danger hidden"></div>
           <div class="form-group">
             <label for="vehicleNumberInput">Enter Vehicle Number</label>
-            <input type="text" id="vehicleNumberInput" class="form-control" placeholder="e.g. WP-CAD-1234" required autocomplete="off">
+            <input type="text" id="vehicleNumberInput" class="form-control vehicle-number-input" placeholder="e.g. WP-CAD-1234" required autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Search is case-insensitive.</p>
           </div>
         </div>

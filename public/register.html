@@ -55,7 +55,7 @@
         <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div class="form-group">
             <label for="vehicleNumber">Vehicle Number</label>
-            <input type="text" id="vehicleNumber" class="form-control" placeholder="e.g. CAD-1234" required>
+            <input type="text" id="vehicleNumber" class="form-control vehicle-number-input" placeholder="e.g. CAD-1234" required oninput="this.value = this.value.toUpperCase()">
           </div>
 
           <div class="form-group">
