@@ -81,7 +81,6 @@ nav a:hover, nav a.active {
   color: var(--accent-primary);
 }
 
-/* Container */
 .container {
   flex: 1;
   max-width: 1200px;
@@ -89,6 +88,7 @@ nav a:hover, nav a.active {
   margin: 40px auto;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 /* Hero Section */
@@ -332,6 +332,7 @@ select.form-control {
   max-width: 100%;
   width: 96%;
   margin: 30px auto;
+  justify-content: flex-start;
 }
 
 .admin-header {
