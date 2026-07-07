@@ -68,11 +68,31 @@ Configure the following Environment Variables in the Vercel dashboard:
 
 ---
 
-## 🔗 Google Form Auto-Configuration & Prefill Setup
+## 🔗 Google Form Auto-Configuration & OAuth2 Setup
 
-When running the application on staging or production:
-1. Go to the **Google Form Setup** tab in the Admin Dashboard.
-2. Click **Connect Google Account** to link your profile and select your form, OR paste the public Google Form URL (`.../viewform`).
-3. Click **Auto-Configure Mappings**. The server will fetch and automatically parse the entry IDs (e.g., `entry.1000001` matching the fields Name, Phone, Address, etc.).
-4. Click **Save Configurations** at the bottom to write settings.
-5. In **Manage Registrations**, click **Autofill** on any user profile. It will redirect to the Google Form with all fields automatically prefilled with that user's information.
+To connect a real Google account and sync forms:
+
+### 1. Configure Google Cloud Developer Project
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project.
+3. Search for and enable the **Google Drive API** and **Google Forms API**.
+4. Go to **OAuth Consent Screen**:
+   - Set User Type to **External** (or **Internal** if using Google Workspace).
+   - Add scopes: `https://www.googleapis.com/auth/drive.readonly` and `https://www.googleapis.com/auth/forms.body.readonly`.
+5. Go to **Credentials**:
+   - Click **Create Credentials** > **OAuth Client ID**.
+   - Set Application Type to **Web application**.
+   - Under **Authorized redirect URIs**, add the callback endpoint of your deployment:
+     - Local: `http://localhost:3000/api/admin/google-oauth-callback`
+     - Production: `https://your-domain.com/api/admin/google-oauth-callback`
+   - Click Save to get your **Client ID** and **Client Secret**.
+
+### 2. Connect Your Account in the Admin Panel
+1. Access the Admin Panel and open the **Google Form Setup** tab.
+2. In the **Google API OAuth Configurations** box, enter your Client ID and Client Secret, then click **Save Client Credentials**.
+3. Under **Google API OAuth Connection**, click **Connect Google Account**.
+4. Complete the authentication flow in the popup window and approve permissions.
+5. Select a form from the **Link Google Form from Google Drive** dropdown and click **Link & Auto-Configure Fields**.
+6. Save the settings.
+
+*(Note: If you do not have Google Developer keys, you can bypass OAuth by pasting the public Google Form URL and clicking **Scrap Mappings (Fallback)**).*

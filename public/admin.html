@@ -107,34 +107,82 @@
           <i class="fa-brands fa-google"></i> Google Form Autofill Setup
         </h2>
         <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">
-          Map user profile attributes to Google Form input entry IDs. Connect your Google account to automatically fetch and configure entry IDs, or paste your form URL and auto-configure mappings.
+          Connect your Google account to retrieve forms and configure field mappings directly, or paste a public Google Form URL to scrape entry mappings.
         </p>
 
-        <!-- Google Connection Panel -->
-        <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px; background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); flex-wrap: wrap;">
+        <!-- Step 1: OAuth Developer Credentials Configurations -->
+        <div id="googleCredentialsPanel" style="margin-bottom: 24px; border: 1px solid var(--border-color); background: var(--bg-tertiary); padding: 24px; border-radius: var(--radius-md);">
+          <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 8px;">
+            <i class="fa-solid fa-gears"></i> 1. Google API OAuth Configurations
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+            To authenticate with your Google account, enter your Google Cloud OAuth 2.0 credentials. 
+            Ensure you add the following **Redirect URI** in your Google Cloud Console project OAuth settings: 
+            <br>
+            <code id="oauthRedirectUri" style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 4px; color: var(--accent-primary); font-family: monospace; display: inline-block; margin-top: 6px; font-weight: bold;">http://localhost:3000/api/admin/google-oauth-callback</code>
+          </p>
+
+          <form id="googleCredentialsForm">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+              <div class="form-group" style="flex: 1; min-width: 250px;">
+                <label for="googleClientId">OAuth Client ID</label>
+                <input type="text" id="googleClientId" class="form-control" placeholder="123456-abc.apps.googleusercontent.com" required>
+              </div>
+              <div class="form-group" style="flex: 1; min-width: 250px;">
+                <label for="googleClientSecret">OAuth Client Secret</label>
+                <input type="password" id="googleClientSecret" class="form-control" placeholder="Enter Developer Client Secret" required autocomplete="new-password">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--accent-primary); border-color: rgba(37,99,235,0.2);">
+              <i class="fa-solid fa-floppy-disk"></i> Save Client Credentials
+            </button>
+          </form>
+        </div>
+
+        <!-- Step 2: Google Account Connection Status Panel -->
+        <div id="googleConnectionPanel" class="hidden" style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px; background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); flex-wrap: wrap;">
           <button type="button" id="btnConnectGoogle" class="btn btn-secondary" style="border-color: #dadce0; color: #3c4043; background: #ffffff; padding: 10px 20px; font-weight: 500;">
             <i class="fa-brands fa-google" style="color: #4285F4; margin-right: 4px;"></i> Connect Google Account
           </button>
           <span id="googleStatus" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">
             <i class="fa-solid fa-circle-xmark" style="color: var(--error); margin-right: 4px;"></i> Google Account Not Connected
           </span>
+          <button type="button" id="btnDisconnectGoogle" class="btn btn-danger btn-sm hidden" style="margin-left: auto;">
+            <i class="fa-solid fa-link-slash"></i> Disconnect Account
+          </button>
         </div>
 
+        <!-- Step 3: Select Google Form from Drive Dropdown -->
+        <div id="googleDriveFormsPanel" class="hidden" style="margin-bottom: 24px; background: var(--bg-tertiary); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+            <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 0;">
+              <label for="googleDriveFormsList" style="font-weight: bold; margin-bottom: 8px;"><i class="fa-brands fa-google-drive" style="color: #1EA362;"></i> Link Google Form from Google Drive</label>
+              <select id="googleDriveFormsList" class="form-control">
+                <option value="" disabled selected>Loading forms list...</option>
+              </select>
+            </div>
+            <button type="button" id="btnFetchFormStructure" class="btn btn-primary" style="height: 48px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Link & Auto-Configure Mappings
+            </button>
+          </div>
+        </div>
+
+        <!-- Configurations mappings Form -->
         <form id="settingsForm">
           <div class="form-group">
             <label for="googleFormUrl">Google Form View URL</label>
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
               <input type="url" id="googleFormUrl" class="form-control" style="flex: 1; min-width: 250px;" placeholder="https://docs.google.com/forms/d/e/1FAIpQLS.../viewform" required>
               <button type="button" id="btnAutoConfigure" class="btn btn-secondary" style="white-space: nowrap; color: var(--accent-primary); border-color: rgba(37,99,235,0.2);">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Configure Mappings
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Scrap Mappings (Fallback)
               </button>
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Must be the public "viewform" URL (not the editor URL).</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Form URL linked from Google account selection or parsed manually.</p>
           </div>
 
           <h3 style="font-size: 1rem; color: var(--accent-primary); margin-top: 24px; margin-bottom: 16px;">Entry ID Mappings</h3>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
-            Find these ID strings (e.g. <code>entry.123456789</code>) by inspecting the input fields of your published Google Form.
+            Entry parameter tags (e.g. <code>entry.123456789</code>) mapped to profile details.
           </p>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -288,56 +336,6 @@
     </div>
   </div>
 
-  <!-- Google Connection Mock Modal -->
-  <div id="googleModal" class="modal">
-    <div class="modal-content" style="max-width: 420px; padding: 0;">
-      <div style="padding: 24px; text-align: center; border-bottom: 1px solid var(--border-color);">
-        <i class="fa-brands fa-google" style="font-size: 2.2rem; color: #4285F4; margin-bottom: 12px;"></i>
-        <h3 style="font-size: 1.3rem; font-weight: 600; color: var(--text-primary);">Sign in with Google</h3>
-        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px;">to connect your forms to VehicleHub</p>
-      </div>
-      <div class="modal-body" style="padding: 24px;">
-        <div id="googleAccountsList" style="display: flex; flex-direction: column; gap: 12px;">
-          <!-- Mock Account Option -->
-          <div onclick="selectMockGoogleAccount('admin.vehiclehub@gmail.com')" style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition);" onmouseover="this.style.backgroundColor='var(--bg-tertiary)'" onmouseout="this.style.backgroundColor='transparent'">
-            <div style="width: 36px; height: 36px; border-radius: 50%; background: #4285F4; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;">A</div>
-            <div style="text-align: left;">
-              <div style="font-weight: 600; font-size: 0.95rem;">Admin User</div>
-              <div style="font-size: 0.8rem; color: var(--text-muted);">admin.vehiclehub@gmail.com</div>
-            </div>
-          </div>
-          <!-- Mock Use Another Account -->
-          <div onclick="selectMockGoogleAccount('custom')" style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition);" onmouseover="this.style.backgroundColor='var(--bg-tertiary)'" onmouseout="this.style.backgroundColor='transparent'">
-            <div style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);"><i class="fa-solid fa-user-plus"></i></div>
-            <div style="text-align: left;">
-              <div style="font-weight: 600; font-size: 0.95rem;">Use another account</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Loader overlay -->
-        <div id="googleLoader" class="hidden text-center" style="padding: 30px 0;">
-          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.8rem; color: #4285F4; margin-bottom: 12px;"></i>
-          <p id="googleLoaderText" style="font-size: 0.9rem; color: var(--text-secondary);">Connecting account...</p>
-        </div>
-
-        <!-- Form Selection overlay -->
-        <div id="googleFormSelect" class="hidden">
-          <label style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 8px; text-align: left;">Select a Google Form from your Google Drive:</label>
-          <select id="googleFormOptions" class="form-control" style="width: 100%; margin-bottom: 16px;">
-            <option value="" disabled selected>Select form</option>
-            <option value="https://docs.google.com/forms/d/e/1FAIpQLSfB2N3QjC63zKxK52N6c5_Qx24x5-zN_testform1/viewform">Vehicle Registration Survey (Auto-detected)</option>
-            <option value="https://docs.google.com/forms/d/e/1FAIpQLScJpXJ7_testform2/viewform">Customer Information Form</option>
-          </select>
-          <button type="button" class="btn btn-primary" onclick="confirmGoogleFormSelection()" style="width: 100%; background-color: #4285F4; border: none; color: white;">Link Form & Configure</button>
-        </div>
-      </div>
-      <div class="modal-footer" style="background: var(--bg-tertiary); padding: 12px 20px; border-top: 1px solid var(--border-color);">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="closeGoogleModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Edit User Modal -->
   <div id="editModal" class="modal">
     <div class="modal-content">
@@ -408,6 +406,9 @@
 
     // Check session authorization
     document.addEventListener('DOMContentLoaded', async () => {
+      // Set Redirect URI label dynamically matching current deployment host
+      document.getElementById('oauthRedirectUri').textContent = window.location.origin + '/api/admin/google-oauth-callback';
+
       try {
         const res = await fetch('/api/admin/check-session');
         const data = await res.json();
@@ -420,6 +421,7 @@
         loadProfiles();
         loadSettings();
         setupQR();
+        checkGoogleConnection();
       } catch (err) {
         console.error(err);
         window.location.href = '/admin-login.html';
@@ -539,147 +541,6 @@
       addModal.style.display = 'none';
     }
 
-    // View Modal Management
-    const viewModal = document.getElementById('viewModal');
-
-    function openViewModal(profileId) {
-      const profile = allProfiles.find(p => p.id === profileId);
-      if (!profile) return;
-
-      document.getElementById('viewName').textContent = profile.name;
-      document.getElementById('viewPhone').textContent = profile.phone;
-      document.getElementById('viewAddress').textContent = profile.address;
-      document.getElementById('viewVehicleNumber').textContent = profile.vehicle_number;
-      document.getElementById('viewVehicleType').textContent = profile.vehicle_type;
-      document.getElementById('viewChassisNumber').textContent = profile.chassis_number;
-      
-      const regDate = new Date(profile.created_at);
-      document.getElementById('viewRegDate').textContent = regDate.toLocaleString();
-
-      viewModal.style.display = 'flex';
-    }
-
-    function closeViewModal() {
-      viewModal.style.display = 'none';
-    }
-
-    // Google Account Connection (Simulated OAuth and Auto Configure)
-    const googleModal = document.getElementById('googleModal');
-    const btnConnectGoogle = document.getElementById('btnConnectGoogle');
-    const googleStatus = document.getElementById('googleStatus');
-    const googleAccountsList = document.getElementById('googleAccountsList');
-    const googleLoader = document.getElementById('googleLoader');
-    const googleLoaderText = document.getElementById('googleLoaderText');
-    const googleFormSelect = document.getElementById('googleFormSelect');
-    const googleFormOptions = document.getElementById('googleFormOptions');
-    const googleFormUrlInput = document.getElementById('googleFormUrl');
-    const btnAutoConfigure = document.getElementById('btnAutoConfigure');
-
-    let connectedGoogleEmail = null;
-
-    btnConnectGoogle.addEventListener('click', () => {
-      googleAccountsList.classList.remove('hidden');
-      googleLoader.classList.add('hidden');
-      googleFormSelect.classList.add('hidden');
-      googleModal.style.display = 'flex';
-    });
-
-    function closeGoogleModal() {
-      googleModal.style.display = 'none';
-    }
-
-    function selectMockGoogleAccount(email) {
-      if (email === 'custom') {
-        const userEmail = prompt('Enter your Google Email Address:', 'mybusiness@gmail.com');
-        if (!userEmail) return;
-        email = userEmail.trim();
-      }
-
-      connectedGoogleEmail = email;
-
-      // Show loader
-      googleAccountsList.classList.add('hidden');
-      googleLoader.classList.remove('hidden');
-      googleLoaderText.textContent = `Connecting to Google account ${email}...`;
-
-      setTimeout(() => {
-        googleLoaderText.textContent = "Scanning Google Drive for forms...";
-        setTimeout(() => {
-          // Show form selection
-          googleLoader.classList.add('hidden');
-          googleFormSelect.classList.remove('hidden');
-        }, 1200);
-      }, 1000);
-    }
-
-    async function confirmGoogleFormSelection() {
-      const selectedUrl = googleFormOptions.value;
-      if (!selectedUrl) {
-        alert('Please select a Google Form.');
-        return;
-      }
-
-      googleFormUrlInput.value = selectedUrl;
-      
-      // Update UI Status
-      googleStatus.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Connected to <strong>${connectedGoogleEmail}</strong>`;
-      btnConnectGoogle.innerHTML = `<i class="fa-brands fa-google" style="color: #4285F4; margin-right: 4px;"></i> Switch Google Account`;
-      
-      closeGoogleModal();
-      showNotification('success', `Linked account and auto-filled Form URL. Running auto-configuration...`);
-
-      // Trigger automatic fields scraping configuration
-      await runAutoConfiguration(selectedUrl);
-    }
-
-    // Auto configuration parser invocation
-    btnAutoConfigure.addEventListener('click', async () => {
-      const url = googleFormUrlInput.value.trim();
-      if (!url) {
-        alert('Please enter a Google Form URL first.');
-        return;
-      }
-      await runAutoConfiguration(url);
-    });
-
-    async function runAutoConfiguration(url) {
-      // Show loader state on configuration inputs
-      btnAutoConfigure.disabled = true;
-      btnAutoConfigure.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Reading Form...`;
-
-      try {
-        const response = await fetch('/api/admin/auto-configure-form', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ google_form_url: url })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          // Populate settings fields
-          document.getElementById('mapName').value = data.mappings.name || '';
-          document.getElementById('mapPhone').value = data.mappings.phone || '';
-          document.getElementById('mapAddress').value = data.mappings.address || '';
-          document.getElementById('mapVehicleNumber').value = data.mappings.vehicle_number || '';
-          document.getElementById('mapVehicleType').value = data.mappings.vehicle_type || '';
-          document.getElementById('mapChassis').value = data.mappings.chassis_number || '';
-          
-          showNotification('success', 'Form fields parsed and auto-configured successfully! Save mappings below to apply changes.');
-        } else {
-          showNotification('danger', data.error || 'Failed to auto-configure. Double check the URL.');
-        }
-      } catch (err) {
-        console.error(err);
-        showNotification('danger', 'Failed to connect to backend scraper service.');
-      } finally {
-        btnAutoConfigure.disabled = false;
-        btnAutoConfigure.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Configure Mappings`;
-      }
-    }
-
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       addError.classList.add('hidden');
@@ -718,6 +579,30 @@
         addError.classList.remove('hidden');
       }
     });
+
+    // View Modal Management
+    const viewModal = document.getElementById('viewModal');
+
+    function openViewModal(profileId) {
+      const profile = allProfiles.find(p => p.id === profileId);
+      if (!profile) return;
+
+      document.getElementById('viewName').textContent = profile.name;
+      document.getElementById('viewPhone').textContent = profile.phone;
+      document.getElementById('viewAddress').textContent = profile.address;
+      document.getElementById('viewVehicleNumber').textContent = profile.vehicle_number;
+      document.getElementById('viewVehicleType').textContent = profile.vehicle_type;
+      document.getElementById('viewChassisNumber').textContent = profile.chassis_number;
+      
+      const regDate = new Date(profile.created_at);
+      document.getElementById('viewRegDate').textContent = regDate.toLocaleString();
+
+      viewModal.style.display = 'flex';
+    }
+
+    function closeViewModal() {
+      viewModal.style.display = 'none';
+    }
 
     // Edit profile Modal Management
     const editModal = document.getElementById('editModal');
@@ -946,6 +831,239 @@
       });
     }
 
+    // ----------------------------------------------------
+    // REAL Google Account OAuth2 & Drive Forms Integration
+    // ----------------------------------------------------
+
+    const googleCredentialsForm = document.getElementById('googleCredentialsForm');
+    const googleConnectionPanel = document.getElementById('googleConnectionPanel');
+    const googleStatus = document.getElementById('googleStatus');
+    const btnConnectGoogle = document.getElementById('btnConnectGoogle');
+    const btnDisconnectGoogle = document.getElementById('btnDisconnectGoogle');
+    const googleDriveFormsPanel = document.getElementById('googleDriveFormsPanel');
+    const googleDriveFormsList = document.getElementById('googleDriveFormsList');
+    const btnFetchFormStructure = document.getElementById('btnFetchFormStructure');
+    const btnAutoConfigure = document.getElementById('btnAutoConfigure');
+
+    // Check credentials and connection status
+    async function checkGoogleConnection() {
+      try {
+        const res = await fetch('/api/admin/google-status');
+        const data = await res.json();
+
+        if (data.isConfigured) {
+          // Credentials saved
+          document.getElementById('googleClientId').value = data.clientId;
+          googleConnectionPanel.classList.remove('hidden');
+
+          if (data.connectedEmail) {
+            // Logged in
+            googleStatus.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--success); margin-right: 4px;"></i> Connected to <strong>${data.connectedEmail}</strong>`;
+            btnConnectGoogle.classList.add('hidden');
+            btnDisconnectGoogle.classList.remove('hidden');
+            
+            // Fetch and load forms list
+            loadGoogleDriveForms();
+          } else {
+            // Credentials set, but not logged in yet
+            googleStatus.innerHTML = `<i class="fa-solid fa-circle-xmark" style="color: var(--error); margin-right: 4px;"></i> Google Account Not Connected`;
+            btnConnectGoogle.classList.remove('hidden');
+            btnDisconnectGoogle.classList.add('hidden');
+            googleDriveFormsPanel.classList.add('hidden');
+          }
+        } else {
+          // No API keys set
+          googleConnectionPanel.classList.add('hidden');
+          googleDriveFormsPanel.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error('Google status error', err);
+      }
+    }
+
+    // Save developer API credentials
+    googleCredentialsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const google_client_id = document.getElementById('googleClientId').value.trim();
+      const google_client_secret = document.getElementById('googleClientSecret').value.trim();
+
+      try {
+        const res = await fetch('/api/admin/google-credentials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ google_client_id, google_client_secret })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          showNotification('success', 'Google developer console API credentials saved. You can now connect your Google account.');
+          document.getElementById('googleClientSecret').value = ''; // clear password view
+          checkGoogleConnection();
+        } else {
+          showNotification('danger', data.error || 'Failed to save credentials.');
+        }
+      } catch (err) {
+        showNotification('danger', 'Failed to connect to backend.');
+      }
+    });
+
+    // Start OAuth connection popup
+    btnConnectGoogle.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/admin/google-oauth-url');
+        const data = await res.json();
+        
+        if (res.ok && data.url) {
+          const width = 500;
+          const height = 650;
+          const left = (screen.width / 2) - (width / 2);
+          const top = (screen.height / 2) - (height / 2);
+          
+          // Open popup for Google Authentication Consent page
+          window.open(data.url, 'google-oauth-popup', `width=${width},height=${height},top=${top},left=${left}`);
+        } else {
+          showNotification('danger', data.error || 'Failed to initialize Google Authentication.');
+        }
+      } catch (err) {
+        showNotification('danger', 'Server response error.');
+      }
+    });
+
+    // Callback triggers called by popup page
+    window.onGoogleConnected = function(email) {
+      showNotification('success', `Successfully authenticated! Connected to Google account: ${email}`);
+      checkGoogleConnection();
+    };
+
+    window.onGoogleConnectionFailed = function(error) {
+      showNotification('danger', `Google connection failed: ${error}`);
+    };
+
+    // Disconnect handler
+    btnDisconnectGoogle.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to disconnect your Google account? Prefill configurations mapping entries will not be removed, but Google Drive sync will stop.')) {
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/admin/google-disconnect', { method: 'POST' });
+        if (res.ok) {
+          showNotification('success', 'Disconnected Google account.');
+          checkGoogleConnection();
+        }
+      } catch (err) {
+        showNotification('danger', 'Server error while disconnecting.');
+      }
+    });
+
+    // Fetch and populate Google Forms listing from Drive
+    async function loadGoogleDriveForms() {
+      googleDriveFormsList.innerHTML = `<option value="" disabled selected>Loading your Google Forms...</option>`;
+      googleDriveFormsPanel.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/admin/google-forms');
+        if (res.ok) {
+          const forms = await res.json();
+          if (forms.length === 0) {
+            googleDriveFormsList.innerHTML = `<option value="" disabled>No Google Forms found in your Google Drive.</option>`;
+            return;
+          }
+
+          googleDriveFormsList.innerHTML = `<option value="" disabled selected>Select a Form to configure</option>`;
+          forms.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.name;
+            googleDriveFormsList.appendChild(opt);
+          });
+        } else {
+          googleDriveFormsList.innerHTML = `<option value="" disabled>Failed to retrieve forms from Google Drive.</option>`;
+        }
+      } catch (err) {
+        googleDriveFormsList.innerHTML = `<option value="" disabled>Drive access connection error.</option>`;
+      }
+    }
+
+    // Link form and auto-configure mappings using Google Forms API
+    btnFetchFormStructure.addEventListener('click', async () => {
+      const formId = googleDriveFormsList.value;
+      if (!formId) {
+        alert('Please select a Google Form from the list first.');
+        return;
+      }
+
+      btnFetchFormStructure.disabled = true;
+      btnFetchFormStructure.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Linking...`;
+
+      try {
+        const res = await fetch(`/api/admin/google-form-structure/${formId}`);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          // Fill Form URL
+          document.getElementById('googleFormUrl').value = data.google_form_url || '';
+          
+          // Populate settings input parameters
+          document.getElementById('mapName').value = data.mappings.name || '';
+          document.getElementById('mapPhone').value = data.mappings.phone || '';
+          document.getElementById('mapAddress').value = data.mappings.address || '';
+          document.getElementById('mapVehicleNumber').value = data.mappings.vehicle_number || '';
+          document.getElementById('mapVehicleType').value = data.mappings.vehicle_type || '';
+          document.getElementById('mapChassis').value = data.mappings.chassis_number || '';
+
+          showNotification('success', 'Form fields fetched and auto-configured successfully using Google Forms API! Save configurations below to apply.');
+        } else {
+          showNotification('danger', data.error || 'Failed to fetch form questions layout.');
+        }
+      } catch (err) {
+        showNotification('danger', 'Server connection error.');
+      } finally {
+        btnFetchFormStructure.disabled = false;
+        btnFetchFormStructure.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Link & Auto-Configure Fields`;
+      }
+    });
+
+    // Scrape Fallback button handler
+    btnAutoConfigure.addEventListener('click', async () => {
+      const url = document.getElementById('googleFormUrl').value.trim();
+      if (!url) {
+        alert('Please enter a Google Form URL first.');
+        return;
+      }
+      
+      btnAutoConfigure.disabled = true;
+      btnAutoConfigure.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Scrapping...`;
+
+      try {
+        const response = await fetch('/api/admin/auto-configure-form', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ google_form_url: url })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          document.getElementById('mapName').value = data.mappings.name || '';
+          document.getElementById('mapPhone').value = data.mappings.phone || '';
+          document.getElementById('mapAddress').value = data.mappings.address || '';
+          document.getElementById('mapVehicleNumber').value = data.mappings.vehicle_number || '';
+          document.getElementById('mapVehicleType').value = data.mappings.vehicle_type || '';
+          document.getElementById('mapChassis').value = data.mappings.chassis_number || '';
+          
+          showNotification('success', 'Form fields parsed and auto-configured successfully from URL! Save mappings below to apply.');
+        } else {
+          showNotification('danger', data.error || 'Scraping failed.');
+        }
+      } catch (err) {
+        showNotification('danger', 'Failed to connect to backend.');
+      } finally {
+        btnAutoConfigure.disabled = false;
+        btnAutoConfigure.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Scrap Mappings (Fallback)`;
+      }
+    });
+
     // Modal background click close handler
     window.addEventListener('click', (e) => {
       if (e.target === editModal) {
@@ -956,9 +1074,6 @@
       }
       if (e.target === viewModal) {
         closeViewModal();
-      }
-      if (e.target === googleModal) {
-        closeGoogleModal();
       }
     });
 
