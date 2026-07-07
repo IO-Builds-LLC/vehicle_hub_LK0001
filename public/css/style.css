@@ -599,3 +599,71 @@ footer {
 .vehicle-number-input {
   text-transform: uppercase;
 }
+
+/* Mobile Responsive Overrides */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 4%;
+    text-align: center;
+  }
+
+  header nav {
+    gap: 16px;
+  }
+
+  .admin-container {
+    width: 94%;
+    margin: 15px auto;
+  }
+
+  .admin-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+
+  .tab-btn {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+  /* Form row and settings grid collapses */
+  #settingsForm div[style*="grid-template-columns"],
+  #viewModal div[style*="grid-template-columns"],
+  .form-row[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  #viewModal div[style*="grid-column"] {
+    grid-column: span 1 !important;
+  }
+
+  /* Search controls collapses */
+  .search-controls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .search-controls button {
+    width: 100%;
+  }
+
+  /* Actions list wrapping */
+  .actions-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .actions-cell > * {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+}
