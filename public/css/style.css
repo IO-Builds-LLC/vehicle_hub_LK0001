@@ -119,7 +119,7 @@ nav a:hover, nav a.active {
   border-radius: var(--radius-lg);
   padding: 32px;
   box-shadow: var(--card-shadow);
-  max-width: 600px;
+  max-width: 100%;
   width: 100%;
   margin: 0 auto;
   transition: var(--transition);
@@ -593,3 +593,8 @@ footer {
 .mb-20 { margin-bottom: 20px; }
 .mt-10 { margin-top: 10px; }
 .hidden { display: none; }
+
+/* Auto-capitalization for inputs */
+.vehicle-number-input {
+  text-transform: uppercase;
+}
