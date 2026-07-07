@@ -188,7 +188,7 @@
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
               <label for="addVehicleNumber">Vehicle Number</label>
-              <input type="text" id="addVehicleNumber" class="form-control" placeholder="e.g. CAD-1234" required autocomplete="off">
+              <input type="text" id="addVehicleNumber" class="form-control vehicle-number-input" placeholder="e.g. CAD-1234" required autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             </div>
 
             <div class="form-group">
@@ -216,6 +216,60 @@
           <button type="submit" class="btn btn-primary btn-sm">Add Profile</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- View User Modal -->
+  <div id="viewModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-eye"></i> Vehicle Profile Details</h3>
+        <button class="modal-close" onclick="closeViewModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="font-size: 1.05rem; color: var(--accent-primary); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+          <i class="fa-solid fa-user"></i> Owner Profile
+        </h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div class="profile-field" style="background-color: var(--bg-primary); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div class="profile-field-label" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;">Owner Name</div>
+            <div class="profile-field-value" id="viewName" style="font-weight: 600;">-</div>
+          </div>
+          <div class="profile-field" style="background-color: var(--bg-primary); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div class="profile-field-label" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;">Phone Number</div>
+            <div class="profile-field-value" id="viewPhone" style="font-weight: 600;">-</div>
+          </div>
+          <div class="profile-field" style="grid-column: span 2; background-color: var(--bg-primary); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div class="profile-field-label" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;">Address</div>
+            <div class="profile-field-value" id="viewAddress" style="font-weight: 600;">-</div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 1.05rem; color: var(--accent-primary); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+          <i class="fa-solid fa-car"></i> Vehicle Details
+        </h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="profile-field" style="background-color: var(--bg-primary); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div class="profile-field-label" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;">Vehicle Number</div>
+            <div class="profile-field-value" id="viewVehicleNumber" style="font-weight: 600; color: var(--accent-primary);">-</div>
+          </div>
+          <div class="profile-field" style="background-color: var(--bg-primary); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div class="profile-field-label" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;">Vehicle Type</div>
+            <div class="profile-field-value" id="viewVehicleType" style="font-weight: 600;">-</div>
+          </div>
+          <div class="profile-field" style="grid-column: span 2; background-color: var(--bg-primary); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div class="profile-field-label" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;">Chassis Number</div>
+            <div class="profile-field-value" id="viewChassisNumber" style="font-weight: 600; font-family: monospace;">-</div>
+          </div>
+          <div class="profile-field" style="grid-column: span 2; background-color: var(--bg-primary); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div class="profile-field-label" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;">Registration Timestamp</div>
+            <div class="profile-field-value" id="viewRegDate" style="font-weight: 600;">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeViewModal()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -249,7 +303,7 @@
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
               <label for="editVehicleNumber">Vehicle Number</label>
-              <input type="text" id="editVehicleNumber" class="form-control" required autocomplete="off">
+              <input type="text" id="editVehicleNumber" class="form-control vehicle-number-input" required autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             </div>
 
             <div class="form-group">
@@ -371,7 +425,7 @@
           <td>${regDate}</td>
           <td>
             <div class="actions-cell">
-              <a href="/profile.html?v=${encodeURIComponent(p.vehicle_number)}" target="_blank" class="btn btn-secondary btn-sm" title="View Profile"><i class="fa-solid fa-eye"></i> View</a>
+              <button onclick="openViewModal(${p.id})" class="btn btn-secondary btn-sm" title="View Profile"><i class="fa-solid fa-eye"></i> View</button>
               ${prefillBtnHtml}
               <button onclick="openEditModal(${p.id})" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
               <button onclick="deleteProfile(${p.id}, '${escapeJS(p.vehicle_number)}')" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash-can"></i> Delete</button>
@@ -418,6 +472,30 @@
 
     function closeAddModal() {
       addModal.style.display = 'none';
+    }
+
+    // View Modal Management
+    const viewModal = document.getElementById('viewModal');
+
+    function openViewModal(profileId) {
+      const profile = allProfiles.find(p => p.id === profileId);
+      if (!profile) return;
+
+      document.getElementById('viewName').textContent = profile.name;
+      document.getElementById('viewPhone').textContent = profile.phone;
+      document.getElementById('viewAddress').textContent = profile.address;
+      document.getElementById('viewVehicleNumber').textContent = profile.vehicle_number;
+      document.getElementById('viewVehicleType').textContent = profile.vehicle_type;
+      document.getElementById('viewChassisNumber').textContent = profile.chassis_number;
+      
+      const regDate = new Date(profile.created_at);
+      document.getElementById('viewRegDate').textContent = regDate.toLocaleString();
+
+      viewModal.style.display = 'flex';
+    }
+
+    function closeViewModal() {
+      viewModal.style.display = 'none';
     }
 
     addForm.addEventListener('submit', async (e) => {
@@ -693,6 +771,9 @@
       }
       if (e.target === addModal) {
         closeAddModal();
+      }
+      if (e.target === viewModal) {
+        closeViewModal();
       }
     });
 
